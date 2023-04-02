@@ -1,0 +1,93 @@
+const searchHelper = (searchKey, query, req) => {
+
+    //Search
+    if (req.query.search) {
+        const searchObject = {};
+
+        //title searchValue
+        //Regex arama yapmak için kullanılan bir yapı
+
+        const regex = new RegExp(req.query.search, "i"); // i büyük küçük harfe duyarlı olmasın diye kullanılır
+        searchObject[searchKey] = regex;
+
+        query = query.where(searchObject);
+
+    }
+
+    return query;
+}
+
+
+const populateHelper = (query, population) => {
+
+    return query.populate(population)
+}
+
+
+const questionSortHelper = (query, req) => {
+
+    //Sort : req.query.sortBy most-answered most-liked
+
+    const sortKey = req.query.sortBy;
+
+    if (sortKey === "most-answered") {
+
+        return query.sort("-answerCount") //Büyükten küçüğe - olmazsa küçükten büyüğe ,, En çok cevaplanan
+
+    }
+
+
+    if (sortKey === "most-liked") {
+
+        return query.sort("-likeCount ") // En çok beğenilen
+
+    }
+
+    return query.sort("-createdAt")  //En güncel
+
+
+
+}
+
+const paginationHelper = async (totalDocument,query,req) => {
+    
+    //Pagination
+
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 5;
+
+    const startIndex = (page - 1) * limit
+    const endIndex = page * limit
+
+    const pagination = {}
+    const total = totalDocument;
+    if (startIndex > 0) {
+        pagination.previous = {
+            page: page - 1,
+            limit: limit
+        }
+    }
+
+    if (endIndex < total) {
+        pagination.next = {
+            page: page + 1,
+            limit: limit
+        }
+    }
+
+    return {
+        query :query === undefined ? undefined : query.skip(startIndex).limit(limit) ,//skip kac tane atlanacağını söyler
+        pagination : pagination,
+        startIndex,
+        limit
+    }
+    
+
+}
+
+module.exports = {
+    searchHelper,
+    populateHelper,
+    questionSortHelper,
+    paginationHelper
+}
